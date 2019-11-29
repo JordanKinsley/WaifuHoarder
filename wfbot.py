@@ -10,30 +10,40 @@ Invite: https://discordapp.com/oauth2/authorize?client_id=649702779320926248&sco
 """
 
 import shelve
+import argparse
 from discord.ext import commands, tasks
 
 description = '''A bot that notifies users on command. Options to use roles instead of DB coming soon!(TM)'''
 default_token = None
 discord_api_token = ''
 
+parser = argparse.ArgumentParser()
 
-def read_token():
+parser.add_argument("-f", "--file", help="load token from file")
+parser.add_argument("-t", "--token", help="specify token in arguments")
+args = parser.parse_args()
+
+
+def read_token(location : str):
     try:
-        with open("token.priv", "r") as f:
+        with open(location, "r") as f:
             lines = f.readlines()
             return lines[0].strip()
     except:
         return None
 
 
-file_token = read_token()
-
-if file_token is None:
-    discord_api_token = default_token
-    print("default token used: {0}".format(default_token))
-else:
-    discord_api_token = file_token
-    print("Loaded token from file: {0}".format(file_token))
+if args.file:
+    file_token = read_token()
+    if file_token is None:
+        discord_api_token = default_token
+        print("default token used: {0}".format(default_token))
+    else:
+        discord_api_token = file_token
+        print("Loaded token from file: {0}".format(file_token))
+elif args.token:
+    discord_api_token = args.token
+    print("using token from cli: {0}".format(args.token))
 
 bot = commands.Bot(command_prefix=';', description=description)
 
@@ -134,7 +144,7 @@ class Waifu(commands.Cog):
         await ctx.send(
             "Thanks, {0}, you've successfully been removed from the notice list for {1}".format(sender, character))
 
-    # TODO: add a 'stopall' command to drop user from all notices (complicated with current implementation
+    # TODO: add a 'stopall' command to drop user from all notices (complicated with current implementation)
 
     # TODO: add a 'debug_user_list' command to show all notices and users (suppress @ replies)
 

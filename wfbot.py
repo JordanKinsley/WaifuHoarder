@@ -21,6 +21,7 @@ parser = argparse.ArgumentParser()
 
 parser.add_argument("-f", "--file", help="load token from file")
 parser.add_argument("-t", "--token", help="specify token in arguments")
+parser.add_argument("-p", "--prefix", help="command prefix")
 args = parser.parse_args()
 
 
@@ -45,7 +46,13 @@ elif args.token:
     discord_api_token = args.token
     print("using token from cli: {0}".format(args.token))
 
-bot = commands.Bot(command_prefix=';', description=description)
+prefix = ''
+if args.prefix:
+    prefix = args.prefix
+else:
+    prefix = ';'
+
+bot = commands.Bot(command_prefix=prefix, description=description)
 
 
 class Waifu(commands.Cog):
@@ -109,10 +116,14 @@ class Waifu(commands.Cog):
     @commands.command(name="notifyme")
     async def notify_me(self, ctx, *, character):
         """Adds the user to the list of people to notified when <character> is posted with the 'its' command"""
+        # TODO: add server-only code (i.e. notices are only for the server requested
         sender = ctx.author.mention
         current_notices = [None]
         try:
             current_notices = self.notify_user_list[character]
+            if sender in current_notices:
+                await ctx.send("You've already signed up for notices for {0}, {1}".format(character, sender))
+                return
             current_notices.append(sender)
         except KeyError:
             current_notices[0] = sender

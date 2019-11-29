@@ -1,1 +1,1 @@
-worker: python wfbot.py --token NjQ5NzAyNzc5MzIwOTI2MjQ4.XeAplw.N-jg18kdg2ONiqet1SrDqkuPrug
+worker: python wfbot.py --token NjQ5NzAyNzc5MzIwOTI2MjQ4.XeAplw.N-jg18kdg2ONiqet1SrDqkuPrug --prefix ;

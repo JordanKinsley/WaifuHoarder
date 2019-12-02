@@ -15,7 +15,7 @@ import datetime
 from discord.ext import commands, tasks
 
 description = '''A bot that notifies users on command. Options to use roles instead of DB coming soon!(TM)'''
-default_token = None # enter a default Discord API token here unless you want to supply one via file or argument
+default_token = None  # enter a default Discord API token here unless you want to supply one via file or argument
 discord_api_token = ''
 
 parser = argparse.ArgumentParser()
@@ -37,7 +37,7 @@ def read_token(location : str):
 
 
 if args.file:
-    file_token = read_token() # try reading the supplied file token in, but if it fails, use default
+    file_token = read_token()  # try reading the supplied file token in, but if it fails, use default
     if file_token is None:
         discord_api_token = default_token
         if args.verbose: print("default token used: {0}".format(default_token))
@@ -81,6 +81,7 @@ class Waifu(commands.Cog):
     async def its(self, ctx, *, character):
         """Pings users who've requested to be notified about <character>"""
         notify_users = None
+        # TODO: resolve server code and aliases
         try:
             notify_users = self.notify_user_list[character]
             if not notify_users: # if no values get returned for a <character>
@@ -122,6 +123,7 @@ class Waifu(commands.Cog):
     async def do_you_know(self, ctx, *, character):
         """Confirms if the bot knows of a particular <character>."""
         sender = ctx.author.mention
+        # TODO: resolve server code and aliases
         try:
             if character in self.notify_user_list:
                 if sender in self.notify_user_list[character]:
@@ -135,29 +137,10 @@ class Waifu(commands.Cog):
         except KeyError:
             await ctx.send("No, I don't have anything on {0}! Sign up with `{1}notifyme {0}`".format(character, ctx.bot.command_prefix))
 
-    @commands.command(name="notifyme")
-    async def notify_me(self, ctx, *, character):
-        """Adds the user to the list of people to notified when <character> is posted with the 'its' command."""
-        # TODO: add server-only code (i.e. notices are only for the server requested)
-        sender = ctx.author.mention
-        notice_key = ctx.guild + ':' + sender
-        current_notices = [None]
-        try:
-            current_notices = self.notify_user_list[character]
-            if notice_key in current_notices:
-                await ctx.send("You've already signed up for notices for {0}, {1}".format(character, sender))
-                return
-            current_notices.append(notice_key)
-        except KeyError:
-            current_notices[0] = notice_key
-        self.notify_user_list[character] = current_notices
-        await ctx.send(
-            'Thanks {0}, you\'ve successfully been added to the notice list for {1}'.format(sender, character))
-
-    async def resolve_server_alias(self, ctx, character):
-        current_server = ctx.guild
+    def resolve_server_alias(self, ctx, character):
+        current_server = str(ctx.guild.id)
         check_alias = current_server + ':' + character
-        resolved_character = None
+        resolved_character = ''
         try:
             resolved_character = self.character_aliases[check_alias].replace(current_server, '')
             if args.verbose:
@@ -171,22 +154,48 @@ class Waifu(commands.Cog):
             print("check_alias: " + check_alias)
         return resolved_character
 
+    @commands.command(name="notifyme")
+    async def notify_me(self, ctx, *, character):
+        """Adds the user to the list of people to notified when <character> is posted with the 'its' command."""
+        # TODO: add server-only code (i.e. notices are only for the server requested)
+        sender = ctx.author.mention
+        if args.verbose:
+            print(sender)
+            print("guild: " + str(ctx.guild))
+            print("guild id: " + str(ctx.guild.id))
+        notice_key = str(ctx.guild.id) + ":" + str(self.resolve_server_alias(ctx, character))
+        if args.verbose:
+            print(notice_key)
+        current_notices = [None]
+        try:
+            current_notices = self.notify_user_list[notice_key]
+            if notice_key in current_notices:
+                await ctx.send("You've already signed up for notices for {0}, {1}".format(character, sender))
+                return
+            current_notices.append(sender)
+        except KeyError:
+            current_notices[0] = sender
+        self.notify_user_list[notice_key] = current_notices
+        await ctx.send(
+            'Thanks {0}, you\'ve successfully been added to the notice list for {1}'.format(sender, character))
 
-    # TODO: alias command or option
     @commands.command(name="alias")
     async def add_alias(self, ctx, alias, character):
-        current_server = ctx.guild
+        if args.verbose:
+            print("alias: " + alias)
+            print("character: " + character)
+        current_server = str(ctx.guild.id)
         sender = ctx.author.mention
-        new_alias = current_server + ':' + character
+        new_alias = current_server + ':' + alias
         try:
             existing_alias = self.character_aliases[new_alias]
             if existing_alias:
-                ctx.send("{0} is already referenced by alias {1}, {2}".format(existing_alias, new_alias, sender))
+                await ctx.send("{0} is already referenced by alias {1}, {2}".format(existing_alias, new_alias, sender))
             else:
                 raise KeyError
         except KeyError:
             self.character_aliases[new_alias] = character
-            ctx.send("OK, notices for {0} will triggered if someone uses `its {1}` from now on.".format(character, alias))
+            await ctx.send("OK, notices for {0} will triggered if someone uses `its {1}` from now on.".format(character, alias))
 
     @commands.command(name="stopnotify")
     async def stop_notify(self, ctx, *, character):
@@ -196,7 +205,8 @@ class Waifu(commands.Cog):
         current_notices = [None]
         try:
             current_notices = self.notify_user_list[character]
-            if args.verbose: print(current_notices)
+            if args.verbose:
+                print(current_notices)
             current_notices.remove(sender)
             self.notify_user_list[character] = current_notices
         except KeyError:
@@ -216,23 +226,39 @@ class Waifu(commands.Cog):
 
     @commands.command(name="dropall")
     @commands.is_owner()
-    async def drop_notices_all(self, ctx):
+    async def drop_all(self, ctx):
+        """**WARNING** Drops the full list of notices and aliases. Only usable by owner."""
+        self.notify_user_list.clear()
+        self.character_aliases.clear()
+        await ctx.send("Removed all notices and aliases")
+
+    @commands.command(name="droptablenotices")
+    @commands.is_owner()
+    async def drop_all_notices(self,ctx):
         """**WARNING** Drops the full list of notices. Only usable by owner."""
         self.notify_user_list.clear()
         await ctx.send("Removed all notices")
+
+    @commands.command(name="droptablealiases")
+    @commands.is_owner()
+    async def drop_all_aliases(self,ctx):
+        """**WARNING** Drops the full list of aliases. Only usable by owner."""
+        self.character_aliases.clear()
+        await ctx.send("Removed all aliases")
 
     @commands.command(name="dropserver")
     # TODO @commands.is_admin()
     async def drop_notices_server(self, ctx):
         """Drops all notices for this server only. Not yet implemented."""
-        server = ctx.guild
+        server = str(ctx.guild.id)
         # TODO server code, check admin
         await ctx.send("Uh oh, not ready yet! Message JKinsley")
 
     @commands.command()
     async def wotd(self, ctx):
         """Prints the Waifu of the Day"""
-
+        if args.verbose:
+            print("wotd invoked by " + str(ctx.author.mention))
         # TODO: implement admin/channel permissions for listing waifu on rotating schedule
 
         await ctx.send("Astolfo, always")

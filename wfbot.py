@@ -11,10 +11,11 @@ Invite: https://discordapp.com/oauth2/authorize?client_id=649702779320926248&sco
 
 import shelve
 import argparse
+import datetime
 from discord.ext import commands, tasks
 
 description = '''A bot that notifies users on command. Options to use roles instead of DB coming soon!(TM)'''
-default_token = None
+default_token = None # enter a default Discord API token here unless you want to supply one via file or argument
 discord_api_token = ''
 
 parser = argparse.ArgumentParser()
@@ -22,7 +23,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument("-f", "--file", help="load token from file")
 parser.add_argument("-t", "--token", help="specify token in arguments")
 parser.add_argument("-p", "--prefix", help="command prefix")
-parser.add_argument("-v", "--verbose", help="verbose mode (prints more info to terminal)")
+parser.add_argument("-v", "--verbose", help="verbose mode (prints more info to terminal)", action="store_true")
 args = parser.parse_args()
 
 
@@ -36,7 +37,7 @@ def read_token(location : str):
 
 
 if args.file:
-    file_token = read_token()
+    file_token = read_token() # try reading the supplied file token in, but if it fails, use default
     if file_token is None:
         discord_api_token = default_token
         if args.verbose: print("default token used: {0}".format(default_token))
@@ -57,6 +58,7 @@ bot = commands.Bot(command_prefix=prefix, description=description)
 
 
 class Waifu(commands.Cog):
+    # These two are used by the shelve module to store what is essentially a dict of IDs mapped to values
     notify_user_list = None
     character_aliases = None
 
@@ -81,9 +83,9 @@ class Waifu(commands.Cog):
         notify_users = None
         try:
             notify_users = self.notify_user_list[character]
-            if not notify_users:
+            if not notify_users: # if no values get returned for a <character>
                 raise KeyError
-        except KeyError as ke:
+        except KeyError:
             await ctx.send("Oops! I don't have an alert for {0}".format(character))
             return
         to_notify = 'Hey,'
@@ -93,13 +95,28 @@ class Waifu(commands.Cog):
         await ctx.send(to_notify)
 
     @commands.command(name="knownwaifus")
+    # TODO rate-limit this command or restrict to admins
     async def known_waifus(self, ctx):
         """Lists the waifus known by the bot"""
+        start = datetime.datetime.now()
+        # running the .keys() function on shelf object is time consuming. We're going to measure the time it took
         waifus = list(self.notify_user_list.keys())
+        end = datetime.datetime.now()
         waifu_list = 'I know of the following waifus: '
         for waifu in waifus:
             waifu_list += waifu + ', '
         await ctx.send(waifu_list)
+
+    @commands.command(name="knownaliases")
+    async def known_aliases(self, ctx):
+        start = datetime.datetime.now()
+        aliases = list(self.character_aliases.keys())
+        end = datetime.datetime.now()
+        alias_list = "I know of the following aliases: \n"
+        for alias in aliases:
+            alias_list += alias + " (refers to "
+            alias_list += str(self.character_aliases[alias]) + ")\n"
+        await ctx.send(alias_list)
 
     @commands.command(name="doyouknow")
     async def do_you_know(self, ctx, *, character):
@@ -159,12 +176,17 @@ class Waifu(commands.Cog):
     @commands.command(name="alias")
     async def add_alias(self, ctx, alias, character):
         current_server = ctx.guild
-        new_alias = current_server + ':'
+        sender = ctx.author.mention
+        new_alias = current_server + ':' + character
         try:
-            # check for existing keys
+            existing_alias = self.character_aliases[new_alias]
+            if existing_alias:
+                ctx.send("{0} is already referenced by alias {1}, {2}".format(existing_alias, new_alias, sender))
+            else:
+                raise KeyError
         except KeyError:
-            # not sure?
-        ctx.send("OK, notices for {0} will triggered if someone uses `its {1}` from now on.".format(character, alias))
+            self.character_aliases[new_alias] = character
+            ctx.send("OK, notices for {0} will triggered if someone uses `its {1}` from now on.".format(character, alias))
 
     @commands.command(name="stopnotify")
     async def stop_notify(self, ctx, *, character):
@@ -200,7 +222,7 @@ class Waifu(commands.Cog):
         await ctx.send("Removed all notices")
 
     @commands.command(name="dropserver")
-    @commands.is_admin()
+    # TODO @commands.is_admin()
     async def drop_notices_server(self, ctx):
         """Drops all notices for this server only. Not yet implemented."""
         server = ctx.guild

@@ -46,7 +46,7 @@ parser.add_argument("-v", "--verbose", help="verbose mode (prints more info to t
 args = parser.parse_args()
 
 
-def read_token(location : str):
+def read_token(location: str):
     try:
         with open(location, "r") as f:
             lines = f.readlines()
@@ -56,16 +56,23 @@ def read_token(location : str):
 
 
 if args.file:
-    file_token = read_token()  # try reading the supplied file token in, but if it fails, use default
+    file_token = read_token(args.file)  # try reading the supplied file token in, but if it fails, use default
     if file_token is None:
-        discord_api_token = default_token
-        if args.verbose: print("default token used: {0}".format(default_token))
+        if default_token:
+            discord_api_token = default_token
+            if args.verbose:
+                print("default token used: {0}".format(default_token))
+        else:
+            print("no valid token supplied, exiting")
+            quit(1)
     else:
         discord_api_token = file_token
-        if args.verbose: print("Loaded token from file: {0}".format(file_token))
+        if args.verbose:
+            print("Loaded token from file: {0}".format(file_token))
 elif args.token:
     discord_api_token = args.token
-    if args.verbose: print("using token from cli: {0}".format(args.token))
+    if args.verbose:
+        print("using token from cli: {0}".format(args.token))
 
 prefix = ''
 if args.prefix:
@@ -156,15 +163,18 @@ class Waifu(commands.Cog):
         try:
             if character in self.notify_user_list:
                 if sender in self.notify_user_list[character]:
-                    await ctx.send("Yes, I know of {0} and you're all set to hear when they get posted next!".format(character))
+                    await ctx.send(
+                        "Yes, I know of {0} and you're all set to hear when they get posted next!".format(character))
                 else:
                     await ctx.send(
-                        "Yes, I know of {0}! I don't see you signed up for notices for them. Sign up with `{1}notifyme {0}`".format(character, ctx.bot.command_prefix))
+                        "Yes, I know of {0}! I don't see you signed up for notices for them. Sign up with `{1}notifyme {0}`".format(
+                            character, ctx.bot.command_prefix))
             else:
                 await ctx.send("No, I don't have anything on {0}! Sign up with `{1}notifyme {0}`".format(character,
-                                                                                                    ctx.bot.command_prefix))
+                                                                                                         ctx.bot.command_prefix))
         except KeyError:
-            await ctx.send("No, I don't have anything on {0}! Sign up with `{1}notifyme {0}`".format(character, ctx.bot.command_prefix))
+            await ctx.send("No, I don't have anything on {0}! Sign up with `{1}notifyme {0}`".format(character,
+                                                                                                     ctx.bot.command_prefix))
 
     def resolve_server_alias(self, ctx, character):
         current_server = str(ctx.guild.id)
@@ -228,7 +238,8 @@ class Waifu(commands.Cog):
                 raise KeyError
         except KeyError:
             self.character_aliases[new_alias] = character
-            await ctx.send("OK, notices for {0} will triggered if someone uses `its {1}` from now on.".format(character, alias))
+            await ctx.send(
+                "OK, notices for {0} will triggered if someone uses `its {1}` from now on.".format(character, alias))
 
     @commands.command(name="stopnotify")
     async def stop_notify(self, ctx, *, character):
@@ -283,14 +294,14 @@ class Waifu(commands.Cog):
 
     @commands.command(name="droptablenotices")
     @commands.is_owner()
-    async def drop_all_notices(self,ctx):
+    async def drop_all_notices(self, ctx):
         """**WARNING** Drops the full list of notices. Only usable by owner."""
         self.notify_user_list.clear()
         await ctx.send("Removed all notices")
 
     @commands.command(name="droptablealiases")
     @commands.is_owner()
-    async def drop_all_aliases(self,ctx):
+    async def drop_all_aliases(self, ctx):
         """**WARNING** Drops the full list of aliases. Only usable by owner."""
         self.character_aliases.clear()
         await ctx.send("Removed all aliases")

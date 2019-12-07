@@ -115,7 +115,6 @@ class Waifu(commands.Cog):
         user_key = str(ctx.guild.id) + "\\" + resolved_character
         if args.verbose:
             print("user_key: " + user_key)
-        # TODO: resolve server code and aliases
         try:
             notify_users = self.notify_user_list[user_key]
             if args.verbose:
@@ -132,7 +131,7 @@ class Waifu(commands.Cog):
         await ctx.send(to_notify)
 
     @commands.command(name="knownwaifus")
-    @commands.cooldown(1,60,type=BucketType.guild)
+    @commands.cooldown(1, 60, type=commands.BucketType.guild)
     async def known_waifus(self, ctx):
         """Lists the waifus known by the bot"""
         start = datetime.datetime.now()
@@ -145,7 +144,7 @@ class Waifu(commands.Cog):
         await ctx.send(waifu_list)
 
     @commands.command(name="knownaliases")
-    @commands.cooldown(1, 60, type=BucketType.guild)
+    @commands.cooldown(1, 60, type=commands.BucketType.guild)
     async def known_aliases(self, ctx):
         start = datetime.datetime.now()
         aliases = list(self.character_aliases.keys())
@@ -267,11 +266,25 @@ class Waifu(commands.Cog):
         await ctx.send(
             "Thanks, {0}, you've successfully been removed from the notice list for {1}".format(sender, character))
 
-    # TODO: add a 'stopall' command to drop user from all notices (complicated with current implementation)
     @commands.command(name="stopall")
+    @commands.cooldown(1, 60, type=commands.BucketType.guild)
     async def stop_all_notices(self, ctx):
+        sender = ctx.author.mention
         notify_keys = list(self.notify_user_list.keys())
-        
+        halt_keys = []
+        for key in notify_keys:
+            if sender in notify_keys[key]:
+                current_notices = self.notify_user_list[key]
+                if args.verbose:
+                    print(current_notices)
+                current_notices.remove(sender)
+                self.notify_user_list[key] = current_notices
+                current_notices = None
+                halt_keys.append(key)
+        end_msg = "Notices ended for the following characters: \n"
+        for key in halt_keys:
+            end_msg += str(key) + " "
+        await ctx.send(end_msg)
 
     @commands.command(name="debugusers")
     @commands.is_owner()
@@ -311,12 +324,28 @@ class Waifu(commands.Cog):
         await ctx.send("Removed all aliases")
 
     @commands.command(name="dropserver")
-    @commands.has_any_role('Moderator', 'Admin', 'Overlord Ambris')
+    # @commands.has_any_role('Moderator', 'Admin', 'Overlord Ambris', 'Princess')
+    @commands.has_permissions(manage_server=True)
     async def drop_notices_server(self, ctx):
         """Drops all notices for this server only. Not yet implemented."""
         server = str(ctx.guild.id)
-        # TODO server code, check admin
-        await ctx.send("Uh oh, not ready yet! Message JKinsley")
+        notify_keys = list(self.notify_user_list.keys())
+        for key in notify_keys:
+            if server in key:
+                del self.notify_user_list[key]
+        await ctx.send("Notices for {0} dropped".format(ctx.guild.name))
+
+    @commands.command(name="dropaliases")
+    # @commands.has_any_role('Moderator', 'Admin', 'Overlord Ambris', 'Princess')
+    @commands.has_permissions(manage_server=True)
+    async def drop_aliases_server(self, ctx):
+        """Drops all notices for this server only. Not yet implemented."""
+        server = str(ctx.guild.id)
+        alias_keys = list(self.character_aliases.keys())
+        for key in alias_keys:
+            if server in key:
+                del self.character_aliases[key]
+        await ctx.send("Aliases for {0} dropped".format(ctx.guild.name))
 
     @commands.command()
     async def wotd(self, ctx):
@@ -340,6 +369,23 @@ class Waifu(commands.Cog):
             await ctx.send(
                 "You need to supply a character for this command! Try `{0}help`".format(ctx.bot.command_prefix))
 
+    @stop_all_notices.error
+    @known_aliases.error
+    @known_waifus.error
+    async def cooldown_error(self, ctx, error):
+        if isinstance(error, commands.CommandOnCooldown):
+            await ctx.send("Uh oh, that command's on cooldown. Please wait a couple of minutes before trying again.")
+
+    @debug_user_list.error
+    @drop_all.error
+    @drop_all_aliases.error
+    @drop_all_notices.error
+    @drop_notices_server.error
+    async def perm_error(self, ctx, error):
+        if isinstance(error, commands.MissingPermissions):
+            await ctx.send("Uh oh. You need to have the {0} permission to use that command".format(error.missing_perms))
+        if isinstance(error, commands.NotOwner):
+            await ctx.send("Uh on. This command is only usable by the bot's owner")
 
 @bot.event
 async def on_ready():

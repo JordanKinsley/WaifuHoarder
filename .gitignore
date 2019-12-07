@@ -1,2 +1,4 @@
 userlist.db*
 aliases.db*
+venv
+.idea

@@ -246,14 +246,14 @@ class Waifu(commands.Cog):
         """Removes the user to the list of people to notified when <character> is posted with the 'its' command.
         Only removes the user from that character's notices."""
         sender = ctx.author.mention
-        # TODO: fix bug with no server or alias resolve
+        notice_key = str(ctx.guild.id) + "\\" + str(self.resolve_server_alias(ctx, character))
         current_notices = [None]
         try:
-            current_notices = self.notify_user_list[character]
+            current_notices = self.notify_user_list[notice_key]
             if args.verbose:
                 print(current_notices)
             current_notices.remove(sender)
-            self.notify_user_list[character] = current_notices
+            self.notify_user_list[notice_key] = current_notices
         except KeyError:
             await ctx.send(
                 "I don't show that anyone signed up for notices regarding {0}, {1}".format(character, sender))

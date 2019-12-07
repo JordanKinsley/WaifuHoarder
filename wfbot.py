@@ -159,21 +159,22 @@ class Waifu(commands.Cog):
     async def do_you_know(self, ctx, *, character):
         """Confirms if the bot knows of a particular <character>."""
         sender = ctx.author.mention
-        # TODO: resolve server code and aliases
+        resolved_character = str(self.resolve_server_alias(ctx, character))
+        notice_key = str(ctx.guild.id) + "\\" + resolved_character
         try:
-            if character in self.notify_user_list:
-                if sender in self.notify_user_list[character]:
+            if resolved_character in self.notify_user_list:
+                if sender in self.notify_user_list[notice_key]:
                     await ctx.send(
-                        "Yes, I know of {0} and you're all set to hear when they get posted next!".format(character))
+                        "Yes, I know of {0} and you're all set to hear when they get posted next!".format(resolved_character))
                 else:
                     await ctx.send(
                         "Yes, I know of {0}! I don't see you signed up for notices for them. Sign up with `{1}notifyme {0}`".format(
-                            character, ctx.bot.command_prefix))
+                            resolved_character, ctx.bot.command_prefix))
             else:
-                await ctx.send("No, I don't have anything on {0}! Sign up with `{1}notifyme {0}`".format(character,
+                await ctx.send("No, I don't have anything on {0}! Sign up with `{1}notifyme {0}`".format(resolved_character,
                                                                                                          ctx.bot.command_prefix))
         except KeyError:
-            await ctx.send("No, I don't have anything on {0}! Sign up with `{1}notifyme {0}`".format(character,
+            await ctx.send("No, I don't have anything on {0}! Sign up with `{1}notifyme {0}`".format(resolved_character,
                                                                                                      ctx.bot.command_prefix))
 
     def resolve_server_alias(self, ctx, character):
@@ -196,13 +197,13 @@ class Waifu(commands.Cog):
     @commands.command(name="notifyme")
     async def notify_me(self, ctx, *, character):
         """Adds the user to the list of people to notified when <character> is posted with the 'its' command."""
-        # TODO: add server-only code (i.e. notices are only for the server requested)
         sender = ctx.author.mention
         if args.verbose:
             print(sender)
             print("guild: " + str(ctx.guild))
             print("guild id: " + str(ctx.guild.id))
-        notice_key = str(ctx.guild.id) + "\\" + str(self.resolve_server_alias(ctx, character))
+        resolved_character = str(self.resolve_server_alias(ctx, character))
+        notice_key = str(ctx.guild.id) + "\\" + resolved_character
         if args.verbose:
             print(notice_key)
         current_notices = [None]
@@ -211,7 +212,7 @@ class Waifu(commands.Cog):
             if args.verbose:
                 print("key found, current notices: " + str(current_notices))
             if sender in current_notices:
-                await ctx.send("You've already signed up for notices for {0}, {1}".format(character, sender))
+                await ctx.send("You've already signed up for notices for {0}, {1}".format(resolved_character, sender))
                 return
             current_notices.append(sender)
         except KeyError:
@@ -220,7 +221,7 @@ class Waifu(commands.Cog):
                 print("key not found, current notices: " + str(current_notices))
         self.notify_user_list[notice_key] = current_notices
         await ctx.send(
-            'Thanks {0}, you\'ve successfully been added to the notice list for {1}'.format(sender, character))
+            'Thanks {0}, you\'ve successfully been added to the notice list for {1}'.format(sender, resolved_character))
 
     @commands.command(name="alias")
     async def add_alias(self, ctx, alias, character):
@@ -266,8 +267,6 @@ class Waifu(commands.Cog):
             "Thanks, {0}, you've successfully been removed from the notice list for {1}".format(sender, character))
 
     # TODO: add a 'stopall' command to drop user from all notices (complicated with current implementation)
-
-    # TODO: add a 'debug_user_list' command to show all notices and users (suppress @ replies)
 
     @commands.command(name="debugusers")
     @commands.is_owner()

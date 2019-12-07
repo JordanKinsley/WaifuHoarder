@@ -132,7 +132,7 @@ class Waifu(commands.Cog):
         await ctx.send(to_notify)
 
     @commands.command(name="knownwaifus")
-    # TODO rate-limit this command or restrict to admins
+    @commands.cooldown(1,60,type=BucketType.guild)
     async def known_waifus(self, ctx):
         """Lists the waifus known by the bot"""
         start = datetime.datetime.now()
@@ -145,6 +145,7 @@ class Waifu(commands.Cog):
         await ctx.send(waifu_list)
 
     @commands.command(name="knownaliases")
+    @commands.cooldown(1, 60, type=BucketType.guild)
     async def known_aliases(self, ctx):
         start = datetime.datetime.now()
         aliases = list(self.character_aliases.keys())
@@ -267,6 +268,10 @@ class Waifu(commands.Cog):
             "Thanks, {0}, you've successfully been removed from the notice list for {1}".format(sender, character))
 
     # TODO: add a 'stopall' command to drop user from all notices (complicated with current implementation)
+    @commands.command(name="stopall")
+    async def stop_all_notices(self, ctx):
+        notify_keys = list(self.notify_user_list.keys())
+        
 
     @commands.command(name="debugusers")
     @commands.is_owner()
@@ -306,7 +311,7 @@ class Waifu(commands.Cog):
         await ctx.send("Removed all aliases")
 
     @commands.command(name="dropserver")
-    # TODO @commands.is_admin()
+    @commands.has_any_role('Moderator', 'Admin', 'Overlord Ambris')
     async def drop_notices_server(self, ctx):
         """Drops all notices for this server only. Not yet implemented."""
         server = str(ctx.guild.id)

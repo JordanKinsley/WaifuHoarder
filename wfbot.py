@@ -136,24 +136,30 @@ class Waifu(commands.Cog):
         """Lists the waifus known by the bot"""
         start = datetime.datetime.now()
         # running the .keys() function on shelf object is time consuming. We're going to measure the time it took
-        waifus = list(self.notify_user_list.keys())
-        end = datetime.datetime.now()
-        waifu_list = 'I know of the following waifus: '
-        for waifu in waifus:
-            waifu_list += waifu + ', '
-        await ctx.send(waifu_list)
+        async with ctx.channel.typing():
+            waifus = list(self.notify_user_list.keys())
+            end = datetime.datetime.now()
+            waifu_list = 'I know of the following waifus: '
+            for waifu in waifus:
+                waifu_list += waifu + ', '
+            if args.verbose:
+                print("time elapsed: {0}".format(end - start))
+            await ctx.send(waifu_list)
 
     @commands.command(name="knownaliases")
     @commands.cooldown(1, 60, type=commands.BucketType.guild)
     async def known_aliases(self, ctx):
         start = datetime.datetime.now()
-        aliases = list(self.character_aliases.keys())
-        end = datetime.datetime.now()
-        alias_list = "I know of the following aliases: \n"
-        for alias in aliases:
-            alias_list += alias + " (refers to "
-            alias_list += str(self.character_aliases[alias]) + ")\n"
-        await ctx.send(alias_list)
+        async with ctx.channel.typing():
+            aliases = list(self.character_aliases.keys())
+            end = datetime.datetime.now()
+            alias_list = "I know of the following aliases: \n"
+            for alias in aliases:
+                alias_list += alias + " (refers to "
+                alias_list += str(self.character_aliases[alias]) + ")\n"
+            if args.verbose:
+                print("time elapsed: {0}".format(end - start))
+            await ctx.send(alias_list)
 
     @commands.command(name="doyouknow")
     async def do_you_know(self, ctx, *, character):
@@ -269,37 +275,67 @@ class Waifu(commands.Cog):
     @commands.command(name="stopall")
     @commands.cooldown(1, 60, type=commands.BucketType.guild)
     async def stop_all_notices(self, ctx):
-        sender = ctx.author.mention
-        notify_keys = list(self.notify_user_list.keys())
-        halt_keys = []
-        for key in notify_keys:
-            if sender in notify_keys[key]:
-                current_notices = self.notify_user_list[key]
+        async with ctx.channel.typing():
+            sender = ctx.author.mention
+            notify_keys = list(self.notify_user_list.keys())
+            halt_keys = []
+            if args.verbose:
+                print("stop_all_notices invoked by {0}".format(sender))
+            for key in notify_keys:
                 if args.verbose:
-                    print(current_notices)
-                current_notices.remove(sender)
-                self.notify_user_list[key] = current_notices
-                current_notices = None
-                halt_keys.append(key)
-        end_msg = "Notices ended for the following characters: \n"
-        for key in halt_keys:
-            end_msg += str(key) + " "
-        await ctx.send(end_msg)
+                    print(str(key))
+                if sender in self.notify_user_list[key]:
+                    if args.verbose:
+                        print(str(self.notify_user_list[key]))
+                    current_notices = self.notify_user_list[key]
+                    if args.verbose:
+                        print(current_notices)
+                    current_notices.remove(sender)
+                    self.notify_user_list[key] = current_notices
+                    halt_keys.append(key)
+            end_msg = "Notices ended for the following characters: \n"
+            for key in halt_keys:
+                key_ns = str(key).partition('\\')[3]
+                end_msg += key_ns + " "
+            await ctx.send(end_msg)
+
+    @commands.command(name="mynotices")
+    @commands.cooldown(1, 60, type=commands.BucketType.guild)
+    async def my_notices(self, ctx):
+        async with ctx.channel.typing():
+            sender = ctx.author.mention
+            notify_keys = list(self.notify_user_list.keys())
+            all_keys = []
+            if args.verbose:
+                print("my_notices invoked by {0}".format(sender))
+            for key in notify_keys:
+                if args.verbose:
+                    print(str(key))
+                if sender in self.notify_user_list[key]:
+                    if args.verbose:
+                        print(str(self.notify_user_list[key]))
+                    all_keys.append(key)
+            end_msg = "Notices ended for the following characters: \n"
+            for key in all_keys:
+                key_ns = str(key).partition('\\')[3]
+                end_msg += key_ns + " "
+            await ctx.send(end_msg)
 
     @commands.command(name="debugusers")
     @commands.is_owner()
     async def debug_user_list(self, ctx):
-        notify_keys = list(self.notify_user_list.keys())
-        if args.verbose:
-            print(notify_keys)
-        user_list = ''
-        for key in notify_keys:
+        async with ctx.channel.typing():
+            notify_keys = list(self.notify_user_list.keys())
             if args.verbose:
-                print(key)
-            user_list + 'key: ' + key + ' user: ' + suppress_mentions(str(self.notify_user_list[key])) + '\n'
-            if args.verbose:
-                print(user_list)
-        await ctx.send(user_list)
+                print(notify_keys)
+            user_list = ''
+            for key in notify_keys:
+                if args.verbose:
+                    print(key)
+                user_list + 'key: ' + key + ' user: ' + suppress_mentions(str(self.notify_user_list[key])) + '\n'
+                if args.verbose:
+                    print(user_list)
+            await ctx.send(user_list)
 
     @commands.command(name="dropall")
     @commands.is_owner()
@@ -373,6 +409,8 @@ class Waifu(commands.Cog):
     @known_aliases.error
     @known_waifus.error
     async def cooldown_error(self, ctx, error):
+        if ctx.bot.is_owner(ctx.author):
+            ctx.reinvoke()
         if isinstance(error, commands.CommandOnCooldown):
             await ctx.send("Uh oh, that command's on cooldown. Please wait a couple of minutes before trying again.")
 
@@ -386,6 +424,7 @@ class Waifu(commands.Cog):
             await ctx.send("Uh oh. You need to have the {0} permission to use that command".format(error.missing_perms))
         if isinstance(error, commands.NotOwner):
             await ctx.send("Uh on. This command is only usable by the bot's owner")
+
 
 @bot.event
 async def on_ready():
@@ -404,6 +443,11 @@ async def shutdown(ctx):
     await ctx.bot.close()
     quit(0)
 
+
+@shutdown.error
+async def not_bot_owner(ctx, error):
+    if isinstance(error, commands.NotOwner):
+        await ctx.send("Uh on. This command is only usable by the bot's owner")
 
 bot.add_cog(Waifu(bot))
 bot.run(discord_api_token)

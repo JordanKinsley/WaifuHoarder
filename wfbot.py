@@ -82,6 +82,10 @@ else:
 
 bot = commands.Bot(command_prefix=prefix, description=description)
 
+# TODO: channel config, possibly as class?
+# TODO: docstrings for functions
+# TODO: general documentation for contributors
+
 
 class Waifu(commands.Cog):
     # These two are used by the shelve module to store what is essentially a dict of IDs mapped to values
@@ -149,6 +153,7 @@ class Waifu(commands.Cog):
     @commands.command(name="knownaliases")
     @commands.cooldown(1, 60, type=commands.BucketType.guild)
     async def known_aliases(self, ctx):
+        # FIXME: docstring
         start = datetime.datetime.now()
         async with ctx.typing():
             aliases = list(self.character_aliases.keys())
@@ -184,6 +189,7 @@ class Waifu(commands.Cog):
                                                                                                      ctx.bot.command_prefix))
 
     def resolve_server_alias(self, ctx, character):
+        # FIXME: docstring
         current_server = str(ctx.guild.id)
         check_alias = current_server + '\\' + character
         resolved_character = ''
@@ -231,6 +237,7 @@ class Waifu(commands.Cog):
 
     @commands.command(name="alias")
     async def add_alias(self, ctx, alias, character):
+        # FIXME: docstring
         if args.verbose:
             print("alias: " + alias)
             print("character: " + character)
@@ -275,6 +282,7 @@ class Waifu(commands.Cog):
     @commands.command(name="stopall")
     @commands.cooldown(1, 60, type=commands.BucketType.guild)
     async def stop_all_notices(self, ctx):
+        # FIXME: docstring
         async with ctx.typing():
             sender = ctx.author.mention
             notify_keys = list(self.notify_user_list.keys())
@@ -302,6 +310,7 @@ class Waifu(commands.Cog):
     @commands.command(name="mynotices")
     @commands.cooldown(1, 60, type=commands.BucketType.guild)
     async def my_notices(self, ctx):
+        # FIXME: docstring
         async with ctx.typing():
             sender = ctx.author.mention
             notify_keys = list(self.notify_user_list.keys())
@@ -324,6 +333,7 @@ class Waifu(commands.Cog):
     @commands.command(name="debugusers")
     @commands.is_owner()
     async def debug_user_list(self, ctx):
+        # FIXME: docstring
         async with ctx.typing():
             notify_keys = list(self.notify_user_list.keys())
             if args.verbose:

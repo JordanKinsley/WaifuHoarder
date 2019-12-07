@@ -282,7 +282,8 @@ class Waifu(commands.Cog):
     @commands.command(name="stopall")
     @commands.cooldown(1, 60, type=commands.BucketType.guild)
     async def stop_all_notices(self, ctx):
-        # FIXME: docstring
+        """Stops all notices on this server for the user. Causes the command to enter a 60 second cooldown
+        and the bot shows it is typing while running as it is a potentially slow operation"""
         async with ctx.typing():
             sender = ctx.author.mention
             notify_keys = list(self.notify_user_list.keys())
@@ -310,7 +311,8 @@ class Waifu(commands.Cog):
     @commands.command(name="mynotices")
     @commands.cooldown(1, 60, type=commands.BucketType.guild)
     async def my_notices(self, ctx):
-        # FIXME: docstring
+        """Lists all notices on this server for the user. Causes the command to enter a 60 second cooldown
+        and the bot shows it is typing while running as it is a potentially slow operation"""
         async with ctx.typing():
             sender = ctx.author.mention
             notify_keys = list(self.notify_user_list.keys())

@@ -1,16 +1,16 @@
-#WaifuHoarder
+# WaifuHoarder
 
 A Discord bot for tagging users on command when certain characters are posted
 
 
-##Requirements
+## Requirements
 
 Python 3.6 or later (3.6.9 used)
 
 Discord.py (version 1.2.5 used)
 
 
-##Usage
+## Usage
 
 python wfbot.py -f/--file FILE TOKEN -t/--token TOKEN -p/--prefix PREFIX -v/--verbose VERBOSE FLAG
 

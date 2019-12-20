@@ -83,7 +83,6 @@ else:
 bot = commands.Bot(command_prefix=prefix, description=description)
 
 # TODO: channel config, possibly as class?
-# TODO: docstrings for functions
 # TODO: general documentation for contributors
 
 
@@ -94,16 +93,21 @@ class Waifu(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
+        # when we initialize, open a pair of 'shelves' (https://docs.python.org/3/library/shelve.html)
+        # writeback is set to False to conserve memory at the expense of addition steps to add info the shelf
         self.notify_user_list = shelve.open('userlist.db', flag='c', writeback=False)
         self.character_aliases = shelve.open("aliases.db", flag="c", writeback=False)
+        # starts the sync_db function so we can have it run on a regular basis
         self.sync_db.start()
 
     def cog_unload(self):
+        # if we're stopping the bot gracefully, close the shelves properly
         self.notify_user_list.close()
         self.character_aliases.close()
 
     @tasks.loop(minutes=2.5)
     async def sync_db(self):
+        # every 2.5 minutes, sync the shelves
         self.notify_user_list.sync()
         self.character_aliases.sync()
 
@@ -116,6 +120,7 @@ class Waifu(commands.Cog):
         resolved_character = str(self.resolve_server_alias(ctx, character))
         if args.verbose:
             print("resolved character: " + resolved_character)
+        # we're only going to look for notices registered for the server where the command got called
         user_key = str(ctx.guild.id) + "\\" + resolved_character
         if args.verbose:
             print("user_key: " + user_key)
@@ -358,7 +363,7 @@ class Waifu(commands.Cog):
     @commands.command(name="debugusers")
     @commands.is_owner()
     async def debug_user_list(self, ctx):
-        # FIXME: docstring
+        """An owner-only debug command that lists all users and notices. Suppresses @ mentions"""
         async with ctx.typing():
             notify_keys = list(self.notify_user_list.keys())
             if args.verbose:

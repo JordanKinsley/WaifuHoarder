@@ -8,23 +8,7 @@ Invite: https://discordapp.com/oauth2/authorize?client_id=649702779320926248&sco
 
 (C) 2019 by Jordan Kinsley
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+Licensed under MIT License, see LICENSE
 """
 
 import shelve
@@ -36,6 +20,8 @@ from discord.utils import escape_mentions as suppress_mentions
 description = '''A bot that notifies users on command. Options to use roles instead of DB coming soon!(TM)'''
 default_token = None  # enter a default Discord API token here unless you want to supply one via file or argument
 discord_api_token = ''
+c_alias_loc = ''
+u_list_loc = ''
 
 parser = argparse.ArgumentParser()
 
@@ -43,6 +29,8 @@ parser.add_argument("-f", "--file", help="load token from file")
 parser.add_argument("-t", "--token", help="specify token in arguments")
 parser.add_argument("-p", "--prefix", help="command prefix")
 parser.add_argument("-v", "--verbose", help="verbose mode (prints more info to terminal)", action="store_true")
+parser.add_argument("-c", "--character", help="file location for character alias shelf")
+parser.add_argument("-u", "--userlist", help="file location for user list shelf")
 args = parser.parse_args()
 
 
@@ -80,6 +68,16 @@ if args.prefix:
 else:
     prefix = ';'
 
+if args.character:
+    c_alias_loc = args.character
+else:
+    c_alias_loc = 'aliases.test.db'
+
+if args.userlist:
+    u_list_loc = args.userlist
+else:
+    u_list_loc = 'userlist.test.db'
+
 bot = commands.Bot(command_prefix=prefix, description=description)
 
 # TODO: channel config, possibly as class?
@@ -95,8 +93,8 @@ class Waifu(commands.Cog):
         self.bot = bot
         # when we initialize, open a pair of 'shelves' (https://docs.python.org/3/library/shelve.html)
         # writeback is set to False to conserve memory at the expense of addition steps to add info the shelf
-        self.notify_user_list = shelve.open('userlist.db', flag='c', writeback=False)
-        self.character_aliases = shelve.open("aliases.db", flag="c", writeback=False)
+        self.notify_user_list = shelve.open(u_list_loc, flag='c', writeback=False)
+        self.character_aliases = shelve.open(c_alias_loc, flag='c', writeback=False)
         # starts the sync_db function so we can have it run on a regular basis
         self.sync_db.start()
 

@@ -461,6 +461,11 @@ class Waifu(commands.Cog):
         if isinstance(error, commands.NotOwner):
             await ctx.send("Uh on. This command is only usable by the bot's owner")
 
+    @add_alias.error
+    async def quote_error(self, ctx, error):
+        if isinstance(error, commands.ExpectedClosingQuoteError):
+            await ctx.send("Hey! I didn't see a closing quote for that command")
+
 
 @bot.event
 async def on_ready():

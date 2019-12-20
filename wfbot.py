@@ -137,7 +137,7 @@ class Waifu(commands.Cog):
     @commands.command(name="knownwaifus")
     @commands.cooldown(1, 60, type=commands.BucketType.guild)
     async def known_waifus(self, ctx):
-        """Lists the waifus known by the bot"""
+        """Lists the waifus known by the bot for this server. Has a cooldown of 60 seconds as this is a potentially time consuming request"""
         start = datetime.datetime.now()
         # running the .keys() function on shelf object is time consuming. We're going to measure the time it took
         async with ctx.typing():
@@ -145,7 +145,11 @@ class Waifu(commands.Cog):
             end = datetime.datetime.now()
             waifu_list = 'I know of the following waifus: '
             for waifu in waifus:
-                waifu_list += waifu + ', '
+                waifu_t = waifu.partition("\\")
+                if waifu_t[0] != str(ctx.guild.id):
+                    pass
+                else:
+                    waifu_list += waifu_t[2] + ', '
             if args.verbose:
                 print("time elapsed: {0}".format(end - start))
             await ctx.send(waifu_list)
@@ -153,15 +157,20 @@ class Waifu(commands.Cog):
     @commands.command(name="knownaliases")
     @commands.cooldown(1, 60, type=commands.BucketType.guild)
     async def known_aliases(self, ctx):
-        # FIXME: docstring
+        """Returns a list of all known aliases for this server. Has a cooldown of 60 seconds as this is a potentially time consuming request"""
+        current_server = str(ctx.guild.id)
         start = datetime.datetime.now()
         async with ctx.typing():
             aliases = list(self.character_aliases.keys())
             end = datetime.datetime.now()
             alias_list = "I know of the following aliases: \n"
             for alias in aliases:
-                alias_list += alias + " (refers to "
-                alias_list += str(self.character_aliases[alias]) + ")\n"
+                alias_t = alias.partition('\\')  # returns a tuple of <server id>, \, and <alias>
+                if alias_t[0] != current_server:
+                    pass
+                else:
+                    alias_list += alias_t[2] + " (refers to "
+                    alias_list += str(self.character_aliases[alias]) + ")\n"
             if args.verbose:
                 print("time elapsed: {0}".format(end - start))
             await ctx.send(alias_list)
@@ -189,7 +198,9 @@ class Waifu(commands.Cog):
                                                                                                      ctx.bot.command_prefix))
 
     def resolve_server_alias(self, ctx, character):
-        # FIXME: docstring
+        """Internal command to help resolve an input <character> with any existing aliases.
+        If <character> matches an existing alias, returns the character the alias refers to.
+        If <character> does not match an alias, returns <character>"""
         current_server = str(ctx.guild.id)
         check_alias = current_server + '\\' + character
         resolved_character = ''
@@ -208,7 +219,7 @@ class Waifu(commands.Cog):
 
     @commands.command(name="notifyme")
     async def notify_me(self, ctx, *, character):
-        """Adds the user to the list of people to notified when <character> is posted with the 'its' command."""
+        """Adds the user to the list of people to notified when <character> is posted with the 'its' command. <character> can be an alias"""
         sender = ctx.author.mention
         if args.verbose:
             print(sender)
@@ -237,7 +248,9 @@ class Waifu(commands.Cog):
 
     @commands.command(name="alias")
     async def add_alias(self, ctx, alias, character):
-        # FIXME: docstring
+        """Assign an alias to a character, see notes.
+        assign <alias> <character> - The "alias" is the new way to refer to "character".
+        "Character" is the original notice assignment. Using quotes (") is key, otherwise the bot will not parse the characters correctly"""
         if args.verbose:
             print("alias: " + alias)
             print("character: " + character)
@@ -278,6 +291,16 @@ class Waifu(commands.Cog):
             return
         await ctx.send(
             "Thanks, {0}, you've successfully been removed from the notice list for {1}".format(sender, character))
+
+    @commands.command(name="removealias")
+    async def remove_alias(self, ctx, *, character):
+        """Removes the alias referenced by <character>"""
+        notice_key = str(ctx.guild.id) + '\\' + character
+        try:
+            del self.character_aliases[notice_key]
+        except KeyError:
+            await ctx.send("I don't have an alias for {0}".format(character))
+        await ctx.send("The alias for {0} has been removed.".format(notice_key))
 
     @commands.command(name="stopall")
     @commands.cooldown(1, 60, type=commands.BucketType.guild)

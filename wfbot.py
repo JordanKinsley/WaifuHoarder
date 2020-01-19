@@ -107,12 +107,15 @@ class Waifu(commands.Cog):
         self.notify_user_list.close()
         self.character_aliases.close()
 
-    @tasks.loop(minutes=2.5)
+    # These @tasks, @commands, @bot symbols above functions are Python decorators and help the bot do specific tasks or
+    # know where to look for functions
+    @tasks.loop(minutes=2.5)  # ignore 'loop object not callable' message in IDE
     async def sync_db(self):
         # every 2.5 minutes, sync the shelves
         self.notify_user_list.sync()
         self.character_aliases.sync()
 
+    # basic command, uses function name as command
     @commands.command()
     async def its(self, ctx, *, character):
         """Pings users who've requested to be notified about <character>"""
@@ -141,6 +144,8 @@ class Waifu(commands.Cog):
         to_notify = to_notify + ', it\'s ' + resolved_character
         await ctx.send(to_notify)
 
+    # command that uses the assigned name as the command name instead of the function
+    # also uses a cooldown to prevent overuse (in this case, 1 command every 60 seconds per server)
     @commands.command(name="knownwaifus")
     @commands.cooldown(1, 60, type=commands.BucketType.guild)
     async def known_waifus(self, ctx):
@@ -189,13 +194,21 @@ class Waifu(commands.Cog):
         """Confirms if the bot knows of a particular <character>."""
         sender = ctx.author.mention
         resolved_character = str(self.resolve_server_alias(ctx, character.title()))
+        # keys are entered into DB as <server>\<character> and Python strings use \ as an escape character, so a
+        # literal "\" requires "\\". Other delimiters were tried, but failed
         notice_key = str(ctx.guild.id) + "\\" + resolved_character
         try:
             if notice_key in self.notify_user_list:
+                if args.verbose:
+                    print("notice key found: {0}".format(notice_key))
                 if sender in self.notify_user_list[notice_key]:
+                    if args.verbose:
+                        print("sender on notice list")
                     await ctx.send(
                         "Yes, I know of {0} and you're all set to hear when they get posted next!".format(resolved_character))
                 else:
+                    if args.verbose:
+                        print("sender not on notice list")
                     await ctx.send(
                         "Yes, I know of {0}! I don't see you signed up for notices for them. Sign up with `{1}notifyme {0}`".format(
                             resolved_character, ctx.bot.command_prefix))
@@ -203,9 +216,12 @@ class Waifu(commands.Cog):
                 await ctx.send("No, I don't have anything on {0}! Sign up with `{1}notifyme {0}`".format(resolved_character,
                                                                                                          ctx.bot.command_prefix))
         except KeyError:
+            if args.verbose:
+                print("notice key not found: {0}".format(notice_key))
             await ctx.send("No, I don't have anything on {0}! Sign up with `{1}notifyme {0}`".format(resolved_character,
                                                                                                      ctx.bot.command_prefix))
 
+    # no decorator because this is an internal helper function
     def resolve_server_alias(self, ctx, character):
         """Internal command to help resolve an input <character> with any existing aliases.
         If <character> matches an existing alias, returns the character the alias refers to.
@@ -214,11 +230,14 @@ class Waifu(commands.Cog):
         check_alias = current_server + '\\' + character
         resolved_character = ''
         try:
+            # if we find that <character> refers to an alias in our character aliases, return the character referred to
+            # by that alias. If this fails, it throws a KeyError, caught below
             resolved_character = self.character_aliases[check_alias].replace(current_server, '')
             if args.verbose:
                 print("resolved_character: " + resolved_character)
                 print("check_alias: " + check_alias)
         except KeyError:
+            # if we don't find any aliases, just return the character
             resolved_character = character
         if args.verbose:
             print("character: " + character)
@@ -365,6 +384,7 @@ class Waifu(commands.Cog):
                 end_msg += key_ns + " "
             await ctx.send(end_msg)
 
+    # this command can only be run by the owner (user who owns the API token under which this bot is running)
     @commands.command(name="debugusers")
     @commands.is_owner()
     async def debug_user_list(self, ctx):
@@ -404,6 +424,7 @@ class Waifu(commands.Cog):
         self.character_aliases.clear()
         await ctx.send("Removed all aliases")
 
+    # only allows users who have the "Manage Server" permission to run (usually the server owner or admins/moderators)
     @commands.command(name="dropserver")
     @commands.has_permissions(manage_guild=True)
     async def drop_notices_server(self, ctx):
@@ -435,6 +456,13 @@ class Waifu(commands.Cog):
 
         await ctx.send("Astolfo, always")
 
+    """
+    Below is the error handling code. Commands that generate errors won't run, and commands without error handlers
+    have no way of informing the user that the command failed. These error handler methods are intended to provide enough
+    info the user so that they can understand why a command failed and run it successfully in the future (if applicable,
+    i.e. have appropriate permissions or contact the owner)
+    """
+
     @stop_notify.error
     @notify_me.error
     @its.error
@@ -454,6 +482,7 @@ class Waifu(commands.Cog):
     @my_notices.error
     async def cooldown_error(self, ctx, error):
         if await ctx.bot.is_owner(ctx.author):
+            # if the owner ran the command, ignore the cooldown and run the command again
             await ctx.reinvoke()
             return
         if isinstance(error, commands.CommandOnCooldown):
@@ -466,13 +495,17 @@ class Waifu(commands.Cog):
     @drop_notices_server.error
     @drop_aliases_server.error
     async def perm_error(self, ctx, error):
+        # we can handle two different permission errors here: a missing server permission (Manage Server) or not being
+        # the bot's owner
         if isinstance(error, commands.MissingPermissions):
             await ctx.send("Uh oh. You need to have the {0} permission to use that command".format(error.missing_perms))
         if isinstance(error, commands.NotOwner):
-            await ctx.send("Uh on. This command is only usable by the bot's owner")
+            await ctx.send("Uh on. This command is only usable by the bot's owner")  # indicate owner here?
 
     @add_alias.error
     async def quote_error(self, ctx, error):
+        # the add_alias command requires that the character and alias be enclosed in quotes. If someone forgets, the
+        # command fails.
         if isinstance(error, commands.ExpectedClosingQuoteError):
             await ctx.send("Hey! I didn't see a closing quote for that command")
 

@@ -119,7 +119,7 @@ class Waifu(commands.Cog):
         if args.verbose:
             print("character: " + character)
         notify_users = None
-        resolved_character = str(self.resolve_server_alias(ctx, character))
+        resolved_character = str(self.resolve_server_alias(ctx, character.title()))
         if args.verbose:
             print("resolved character: " + resolved_character)
         # we're only going to look for notices registered for the server where the command got called
@@ -188,7 +188,7 @@ class Waifu(commands.Cog):
     async def do_you_know(self, ctx, *, character):
         """Confirms if the bot knows of a particular <character>."""
         sender = ctx.author.mention
-        resolved_character = str(self.resolve_server_alias(ctx, character))
+        resolved_character = str(self.resolve_server_alias(ctx, character.title()))
         notice_key = str(ctx.guild.id) + "\\" + resolved_character
         try:
             if resolved_character in self.notify_user_list:
@@ -211,7 +211,7 @@ class Waifu(commands.Cog):
         If <character> matches an existing alias, returns the character the alias refers to.
         If <character> does not match an alias, returns <character>"""
         current_server = str(ctx.guild.id)
-        check_alias = current_server + '\\' + character
+        check_alias = current_server + '\\' + character.title()
         resolved_character = ''
         try:
             resolved_character = self.character_aliases[check_alias].replace(current_server, '')
@@ -234,7 +234,7 @@ class Waifu(commands.Cog):
             print(sender)
             print("guild: " + str(ctx.guild))
             print("guild id: " + str(ctx.guild.id))
-        resolved_character = str(self.resolve_server_alias(ctx, character))
+        resolved_character = str(self.resolve_server_alias(ctx, character.title()))
         notice_key = str(ctx.guild.id) + "\\" + resolved_character
         if args.verbose:
             print(notice_key)
@@ -265,7 +265,7 @@ class Waifu(commands.Cog):
             print("character: " + character)
         current_server = str(ctx.guild.id)
         sender = ctx.author.mention
-        new_alias = current_server + '\\' + alias
+        new_alias = current_server + '\\' + alias.title()
         try:
             existing_alias = self.character_aliases[new_alias]
             if existing_alias:
@@ -282,7 +282,7 @@ class Waifu(commands.Cog):
         """Removes the user to the list of people to notified when <character> is posted with the 'its' command.
         Only removes the user from that character's notices."""
         sender = ctx.author.mention
-        notice_key = str(ctx.guild.id) + "\\" + str(self.resolve_server_alias(ctx, character))
+        notice_key = str(ctx.guild.id) + "\\" + str(self.resolve_server_alias(ctx, character.title()))
         current_notices = [None]
         try:
             current_notices = self.notify_user_list[notice_key]
@@ -304,7 +304,7 @@ class Waifu(commands.Cog):
     @commands.command(name="removealias")
     async def remove_alias(self, ctx, *, character):
         """Removes the alias referenced by <character>"""
-        notice_key = str(ctx.guild.id) + '\\' + character
+        notice_key = str(ctx.guild.id) + '\\' + character.title()
         try:
             del self.character_aliases[notice_key]
         except KeyError:

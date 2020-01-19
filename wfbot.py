@@ -191,7 +191,7 @@ class Waifu(commands.Cog):
         resolved_character = str(self.resolve_server_alias(ctx, character.title()))
         notice_key = str(ctx.guild.id) + "\\" + resolved_character
         try:
-            if resolved_character in self.notify_user_list:
+            if notice_key in self.notify_user_list:
                 if sender in self.notify_user_list[notice_key]:
                     await ctx.send(
                         "Yes, I know of {0} and you're all set to hear when they get posted next!".format(resolved_character))

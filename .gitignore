@@ -1,7 +1,7 @@
 userlist.*
 aliases.*
 venv
-# .idea
-# *.priv
+.idea
+*.priv
 discopy
 wfbotlogs*

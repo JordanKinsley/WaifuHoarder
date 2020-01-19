@@ -4,4 +4,4 @@ venv
 .idea
 *.priv
 discopy
-
+wfbotlogs*

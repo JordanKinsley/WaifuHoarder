@@ -211,7 +211,7 @@ class Waifu(commands.Cog):
         If <character> matches an existing alias, returns the character the alias refers to.
         If <character> does not match an alias, returns <character>"""
         current_server = str(ctx.guild.id)
-        check_alias = current_server + '\\' + character.title()
+        check_alias = current_server + '\\' + character
         resolved_character = ''
         try:
             resolved_character = self.character_aliases[check_alias].replace(current_server, '')

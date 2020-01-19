@@ -83,6 +83,9 @@ bot = commands.Bot(command_prefix=prefix, description=description)
 
 # TODO: channel config, possibly as class?
 # TODO: general documentation for contributors
+# TODO: title case on user input for characters
+# TODO: tag multiple characters with ;notifyme
+# TODO: notify for multiple characters?
 
 
 class Waifu(commands.Cog):

@@ -28,6 +28,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument("-f", "--file", help="load token from file")
 parser.add_argument("-t", "--token", help="specify token in arguments")
 parser.add_argument("-p", "--prefix", help="command prefix")
+# if -v is passed on command line, no need to add argument following
 parser.add_argument("-v", "--verbose", help="verbose mode (prints more info to terminal)", action="store_true")
 parser.add_argument("-c", "--character", help="file location for character alias shelf")
 parser.add_argument("-u", "--userlist", help="file location for user list shelf")
@@ -148,8 +149,10 @@ class Waifu(commands.Cog):
             end = datetime.datetime.now()
             waifu_list = 'I know of the following waifus: '
             for waifu in waifus:
+                # split the returned value into (<server>, \, <character>)
                 waifu_t = waifu.partition("\\")
                 if waifu_t[0] != str(ctx.guild.id):
+                    # if the server doesn't match the current server for this command, skip it
                     pass
                 else:
                     waifu_list += waifu_t[2] + ', '
@@ -306,6 +309,7 @@ class Waifu(commands.Cog):
         await ctx.send("The alias for {0} has been removed.".format(notice_key))
 
     @commands.command(name="stopall")
+    # only allow the command to be run once every 60 seconds on each server this bot is in
     @commands.cooldown(1, 60, type=commands.BucketType.guild)
     async def stop_all_notices(self, ctx):
         """Stops all notices on this server for the user. Causes the command to enter a 60 second cooldown

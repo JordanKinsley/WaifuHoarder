@@ -1,4 +1,5 @@
-userlist.test*
-aliases.test*
+userlist.*
+aliases.*
 venv
 .idea
+*.priv

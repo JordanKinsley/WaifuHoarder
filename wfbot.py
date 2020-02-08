@@ -109,11 +109,14 @@ class Waifu(commands.Cog):
 
     # These @tasks, @commands, @bot symbols above functions are Python decorators and help the bot do specific tasks or
     # know where to look for functions
-    @tasks.loop(minutes=2.5)  # ignore 'loop object not callable' message in IDE
+    @tasks.loop(minutes=15)  # ignore 'loop object not callable' message in IDE
     async def sync_db(self):
+        # FIXME db not flushing to file correctly on RPi
         # every 2.5 minutes, sync the shelves
-        self.notify_user_list.sync()
-        self.character_aliases.sync()
+        self.notify_user_list.close()
+        self.notify_user_list = shelve.open(u_list_loc, flag='c', writeback=False)
+        self.character_aliases.close()
+        self.character_aliases = shelve.open(c_alias_loc, flag='c', writeback=False)
 
     # basic command, uses function name as command
     @commands.command()

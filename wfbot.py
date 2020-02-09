@@ -111,7 +111,6 @@ class Waifu(commands.Cog):
     # know where to look for functions
     @tasks.loop(minutes=15)  # ignore 'loop object not callable' message in IDE
     async def sync_db(self):
-        # FIXME db not flushing to file correctly on RPi
         # every 2.5 minutes, sync the shelves
         self.notify_user_list.close()
         self.notify_user_list = shelve.open(u_list_loc, flag='c', writeback=False)
@@ -381,7 +380,7 @@ class Waifu(commands.Cog):
                     if args.verbose:
                         print(str(self.notify_user_list[key]))
                     all_keys.append(key)
-            end_msg = "Notices ended for the following characters: \n"
+            end_msg = "You are signed up for notices for the following characters: \n"
             for key in all_keys:
                 key_ns = str(key).partition('\\')[2]
                 end_msg += key_ns + " "

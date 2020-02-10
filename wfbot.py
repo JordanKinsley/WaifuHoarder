@@ -83,7 +83,6 @@ bot = commands.Bot(command_prefix=prefix, description=description)
 
 # TODO: channel config, possibly as class?
 # TODO: general documentation for contributors
-# TODO: title case on user input for characters
 # TODO: tag multiple characters with ;notifyme
 # TODO: notify for multiple characters?
 
@@ -117,10 +116,16 @@ class Waifu(commands.Cog):
         self.character_aliases.close()
         self.character_aliases = shelve.open(c_alias_loc, flag='c', writeback=False)
 
-    # basic command, uses function name as command
+    # basic command that uses the function name as the command name
     @commands.command()
     async def its(self, ctx, *, character):
         """Pings users who've requested to be notified about <character>"""
+        # takes a single argument without quotes, anything passed as the "character" gets sent as input
+        await self.itis(character)
+
+    # helper function for its() and itsm(), but not a command
+    async def itis(self, ctx, character):
+        """Takes a Discord Context ctx and string character as arguments and sends notices to all users signed up for them"""
         if args.verbose:
             print("character: " + character)
         notify_users = None
@@ -145,6 +150,13 @@ class Waifu(commands.Cog):
             to_notify = to_notify + ' ' + user
         to_notify = to_notify + ', it\'s ' + resolved_character
         await ctx.send(to_notify)
+
+    @commands.command()
+    async def itsm(self, ctx, *characters):
+        """Pings users who have requested notices for however many characters are passed. Characters with spaces in names
+        need to be enclosed in double quotes (i.e. Sunset Shimmer is not the same as "Sunset Shimmer")"""
+        for character in characters:
+            await self.itis(ctx, character)
 
     # command that uses the assigned name as the command name instead of the function
     # also uses a cooldown to prevent overuse (in this case, 1 command every 60 seconds per server)

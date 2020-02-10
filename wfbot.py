@@ -121,7 +121,7 @@ class Waifu(commands.Cog):
     async def its(self, ctx, *, character):
         """Pings users who've requested to be notified about <character>"""
         # takes a single argument without quotes, anything passed as the "character" gets sent as input
-        await self.itis(character)
+        await self.itis(ctx, character)
 
     # helper function for its() and itsm(), but not a command
     async def itis(self, ctx, character):

@@ -153,7 +153,7 @@ class Waifu(commands.Cog):
     async def itsm(self, ctx, *characters):
         """Pings users who have requested notices for however many characters are passed. Characters with spaces in names
         need to be enclosed in double quotes (i.e. Sunset Shimmer is not the same as "Sunset Shimmer")"""
-        notice_list = None
+        notice_list = ''
         for character in characters:
             notice_list = notice_list + self.itis(ctx, character)
         await ctx.send(notice_list)
@@ -258,9 +258,9 @@ class Waifu(commands.Cog):
         """Adds the user to the list of people to notified when <character> is posted with the 'its' command. <character> can be an alias"""
         await ctx.send(self.notify(ctx, character))
 
-    @commands.command(name="mutlinotify")
+    @commands.command(name="multinotify")
     async def notify_multiple(self, ctx, *characters):
-        confirmed_notices = None
+        confirmed_notices = ''
         for character in characters:
             confirmed_notices = confirmed_notices + self.notify(ctx, character)
         await ctx.send(confirmed_notices)
@@ -394,7 +394,7 @@ class Waifu(commands.Cog):
         """An owner-only debug command that lists all users and notices. Suppresses @ mentions"""
         async with ctx.typing():
             notify_keys = list(self.notify_user_list.keys())
-            log(notify_keys)
+            log(str(notify_keys))
             user_list = ''
             for key in notify_keys:
                 log(key)

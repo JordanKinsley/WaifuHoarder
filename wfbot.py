@@ -256,6 +256,16 @@ class Waifu(commands.Cog):
     @commands.command(name="notifyme")
     async def notify_me(self, ctx, *, character):
         """Adds the user to the list of people to notified when <character> is posted with the 'its' command. <character> can be an alias"""
+        await ctx.send(self.notify(ctx, character))
+
+    @commands.command(name="mutlinotify")
+    async def notify_multiple(self, ctx, *characters):
+        confirmed_notices = None
+        for character in characters:
+            confirmed_notices = confirmed_notices + self.notify(ctx, character)
+        await ctx.send(confirmed_notices)
+
+    def notify(self, ctx, character):
         sender = ctx.author.mention
         log(sender)
         log("guild: " + str(ctx.guild))
@@ -268,15 +278,13 @@ class Waifu(commands.Cog):
             current_notices = self.notify_user_list[notice_key]
             log("key found, current notices: " + str(current_notices))
             if sender in current_notices:
-                await ctx.send("You've already signed up for notices for {0}, {1}".format(resolved_character, sender))
-                return
+                return str("You've already signed up for notices for {0}, {1}".format(resolved_character, sender))
             current_notices.append(sender)
         except KeyError:
             current_notices[0] = sender
             log("key not found, current notices: " + str(current_notices))
         self.notify_user_list[notice_key] = current_notices
-        await ctx.send(
-            'Thanks {0}, you\'ve successfully been added to the notice list for {1}'.format(sender, resolved_character))
+        return str('Thanks {0}, you\'ve successfully been added to the notice list for {1}'.format(sender, resolved_character))
 
     @commands.command(name="alias")
     async def add_alias(self, ctx, alias, character):
@@ -376,7 +384,7 @@ class Waifu(commands.Cog):
             end_msg = "You are signed up for notices for the following characters: \n"
             for key in all_keys:
                 key_ns = str(key).partition('\\')[2]
-                end_msg += key_ns + " "
+                end_msg += key_ns + ", "
             await ctx.send(end_msg)
 
     # this command can only be run by the owner (user who owns the API token under which this bot is running)
@@ -390,8 +398,9 @@ class Waifu(commands.Cog):
             user_list = ''
             for key in notify_keys:
                 log(key)
-                user_list + 'key: ' + key + ' user: ' + suppress_mentions(str(self.notify_user_list[key])) + '\n'
+                user_list + 'key: ' + key + ' user: ' + str(self.notify_user_list[key]) + '\n'
                 log(user_list)
+            user_list = suppress_mentions(user_list)
             await ctx.send(user_list)
 
     @commands.command(name="dropall")

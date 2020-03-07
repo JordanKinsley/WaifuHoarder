@@ -40,6 +40,19 @@ def log(output: str):
         print("@{0}: {1}".format(datetime.datetime.now().isoformat(" ", 'seconds'), output))
 
 
+def discord_split(message: str):
+    messages = []
+    if len(message) > 2000:
+        while len(message) > 2000:
+            short = message[:1997] + "..."
+            # FIXME: find the last index of a > before the end of the string
+            message = message[:1997]
+            messages.append(short)
+    else:
+        messages.append(message)
+    return messages
+
+
 def read_token(location: str):
     try:
         with open(location, "r") as f:
@@ -125,6 +138,11 @@ class Waifu(commands.Cog):
         # takes a single argument without quotes, anything passed as the "character" gets sent as input
         await ctx.send(self.itis(ctx, character))
 
+    @commands.command()
+    async def itsnn(self, ctx, *, character):
+        no_mention = suppress_mentions(self.itis(ctx, character))
+        await ctx.send(no_mention)
+
     # helper function for its() and itsm(), but not a command
     def itis(self, ctx, character):
         """Takes a Discord Context ctx and string character as arguments and sends notices to all users signed up for them"""
@@ -146,6 +164,7 @@ class Waifu(commands.Cog):
         for user in notify_users:
             to_notify = to_notify + ' ' + user
         to_notify = to_notify + ', it\'s ' + resolved_character
+        to_notify += "\n"
         # await ctx.send(to_notify)
         return to_notify
 
@@ -278,13 +297,13 @@ class Waifu(commands.Cog):
             current_notices = self.notify_user_list[notice_key]
             log("key found, current notices: " + str(current_notices))
             if sender in current_notices:
-                return str("You've already signed up for notices for {0}, {1}".format(resolved_character, sender))
+                return str("You've already signed up for notices for {0}, {1}\n".format(resolved_character, sender))
             current_notices.append(sender)
         except KeyError:
             current_notices[0] = sender
             log("key not found, current notices: " + str(current_notices))
         self.notify_user_list[notice_key] = current_notices
-        return str('Thanks {0}, you\'ve successfully been added to the notice list for {1}'.format(sender, resolved_character))
+        return str('Thanks {0}, you\'ve successfully been added to the notice list for {1}\n'.format(sender, resolved_character))
 
     @commands.command(name="alias")
     async def add_alias(self, ctx, alias, character):
@@ -398,8 +417,8 @@ class Waifu(commands.Cog):
             user_list = ''
             for key in notify_keys:
                 log(key)
-                user_list + 'key: ' + key + ' user: ' + str(self.notify_user_list[key]) + '\n'
-                log(user_list)
+                user_list += 'key: ' + key + ' user: ' + str(self.notify_user_list[key]) + '\n'
+            log(user_list)
             user_list = suppress_mentions(user_list)
             await ctx.send(user_list)
 

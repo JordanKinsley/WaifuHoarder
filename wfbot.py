@@ -159,7 +159,7 @@ class Waifu(commands.Cog):
             if not notify_users:  # if no values get returned for a <character>
                 raise KeyError
         except KeyError:
-            return str("Oops! I don't have an alert for {0},{1}\n".format(resolved_character, ctx.author.mention))
+            return str("Oops! I don't have an alert for {0}, {1}\n".format(resolved_character, ctx.author.mention))
         to_notify = 'Hey,'
         for user in notify_users:
             to_notify = to_notify + ' ' + user

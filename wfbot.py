@@ -44,10 +44,17 @@ def discord_split(message: str):
     messages = []
     if len(message) > 2000:
         while len(message) > 2000:
-            short = message[:1997] + "..."
-            # FIXME: find the last index of a > before the end of the string
-            message = message[:1997]
+            begin_check = 1972  # user ids can be up to 23 characters based on observation, which we subtract from the below
+            end_check = 1995  # account for the ellipsis because 2000 chars is the max
+            end_index = message.find('>', begin_check, end_check)
+            if end_index == -1:
+                end_index = end_check
+            end_index += 1
+            short = message[:end_index] + "..."
+            message = message[end_index + 1:]  # start our next message after the end of the current
             messages.append(short)
+        else:
+            messages.append(message)
     else:
         messages.append(message)
     return messages
@@ -139,9 +146,10 @@ class Waifu(commands.Cog):
         await ctx.send(self.itis(ctx, character))
 
     @commands.command()
+    @commands.is_owner()
     async def itsnn(self, ctx, *, character):
         no_mention = suppress_mentions(self.itis(ctx, character))
-        await ctx.send(no_mention)
+        await ctx.send(no_mention, delete_after=300)
 
     # helper function for its() and itsm(), but not a command
     def itis(self, ctx, character):
@@ -198,7 +206,9 @@ class Waifu(commands.Cog):
                 else:
                     waifu_list += waifu_t[2] + ', '
             log("time elapsed: {0}".format(end - start))
-            await ctx.send(waifu_list)
+            results = discord_split(waifu_list)
+            for result in results:
+                await ctx.send(result)
 
     @commands.command(name="knownaliases")
     @commands.cooldown(1, 60, type=commands.BucketType.guild)
@@ -282,7 +292,9 @@ class Waifu(commands.Cog):
         confirmed_notices = ''
         for character in characters:
             confirmed_notices = confirmed_notices + self.notify(ctx, character)
-        await ctx.send(confirmed_notices)
+        results = discord_split(confirmed_notices)
+        for result in results:
+            await ctx.send(result)
 
     def notify(self, ctx, character):
         sender = ctx.author.mention
@@ -513,6 +525,7 @@ class Waifu(commands.Cog):
     @drop_all_notices.error
     @drop_notices_server.error
     @drop_aliases_server.error
+    @itsnn.error
     async def perm_error(self, ctx, error):
         # we can handle two different permission errors here: a missing server permission (Manage Server) or not being
         # the bot's owner

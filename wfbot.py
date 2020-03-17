@@ -368,7 +368,7 @@ class Waifu(commands.Cog):
     @commands.command(name="removealias")
     async def remove_alias(self, ctx, *, character):
         """Removes the alias referenced by <character>"""
-        notice_key = str(ctx.guild.id) + '\\' + character.title()
+        notice_key = str(ctx.guild.id) + '\\' + character
         try:
             del self.character_aliases[notice_key]
         except KeyError:
@@ -379,7 +379,7 @@ class Waifu(commands.Cog):
     @commands.is_owner()
     async def remove_waifu(self, ctx, *, character):
         """Removes the alias referenced by <character>"""
-        notice_key = str(ctx.guild.id) + '\\' + character.title()
+        notice_key = str(ctx.guild.id) + '\\' + character
         try:
             del self.notify_user_list[notice_key]
         except KeyError:

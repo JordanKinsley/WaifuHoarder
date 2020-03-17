@@ -195,6 +195,7 @@ class Waifu(commands.Cog):
         # running the .keys() function on shelf object is time consuming. We're going to measure the time it took
         async with ctx.typing():
             waifus = list(self.notify_user_list.keys())
+            waifus = sorted(waifus)
             end = datetime.datetime.now()
             waifu_list = 'I know of the following waifus: '
             for waifu in waifus:
@@ -218,6 +219,7 @@ class Waifu(commands.Cog):
         start = datetime.datetime.now()
         async with ctx.typing():
             aliases = list(self.character_aliases.keys())
+            aliases = sorted(aliases)
             end = datetime.datetime.now()
             alias_list = "I know of the following aliases: \n"
             for alias in aliases:
@@ -228,7 +230,9 @@ class Waifu(commands.Cog):
                     alias_list += alias_t[2] + " (refers to "
                     alias_list += str(self.character_aliases[alias]) + ")\n"
             log("time elapsed: {0}".format(end - start))
-            await ctx.send(alias_list)
+            results = discord_split(alias_list)
+            for result in results:
+                await ctx.send(result)
 
     @commands.command(name="doyouknow")
     async def do_you_know(self, ctx, *, character):
@@ -371,6 +375,17 @@ class Waifu(commands.Cog):
             await ctx.send("I don't have an alias for {0}".format(character))
         await ctx.send("The alias for {0} has been removed.".format(notice_key))
 
+    @commands.command(name="removewaifu")
+    @commands.is_owner()
+    async def remove_waifu(self, ctx, *, character):
+        """Removes the alias referenced by <character>"""
+        notice_key = str(ctx.guild.id) + '\\' + character.title()
+        try:
+            del self.notify_user_list[notice_key]
+        except KeyError:
+            await ctx.send("I don't have a character by the name of {0}".format(character))
+        await ctx.send("The character {0} has been removed.".format(notice_key))
+
     @commands.command(name="stopall")
     # only allow the command to be run once every 60 seconds on each server this bot is in
     @commands.cooldown(1, 60, type=commands.BucketType.guild)
@@ -498,6 +513,7 @@ class Waifu(commands.Cog):
     @notify_me.error
     @its.error
     @do_you_know.error
+    @itsm.error
     async def no_char_error(self, ctx, error):
         try:
             if isinstance(error, commands.MissingRequiredArgument):
@@ -526,6 +542,7 @@ class Waifu(commands.Cog):
     @drop_notices_server.error
     @drop_aliases_server.error
     @itsnn.error
+    @remove_waifu.error
     async def perm_error(self, ctx, error):
         # we can handle two different permission errors here: a missing server permission (Manage Server) or not being
         # the bot's owner

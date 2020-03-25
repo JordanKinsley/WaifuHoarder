@@ -293,6 +293,7 @@ class Waifu(commands.Cog):
 
     @commands.command(name="multinotify")
     async def notify_multiple(self, ctx, *characters):
+        '''Adds multiple characters at a time. All separate characters must be enclosed in quotes for the command to be valid'''
         confirmed_notices = ''
         for character in characters:
             confirmed_notices = confirmed_notices + self.notify(ctx, character)
@@ -427,10 +428,12 @@ class Waifu(commands.Cog):
                 if sender in self.notify_user_list[key]:
                     log(str(self.notify_user_list[key]))
                     all_keys.append(key)
+            all_keys = sorted(all_keys)
             end_msg = "You are signed up for notices for the following characters: \n"
             for key in all_keys:
                 key_ns = str(key).partition('\\')[2]
                 end_msg += key_ns + ", "
+            end_msg = end_msg[:-2]
             await ctx.send(end_msg)
 
     # this command can only be run by the owner (user who owns the API token under which this bot is running)

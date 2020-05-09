@@ -51,7 +51,7 @@ def discord_split(message: str):
                 end_index = end_check
             end_index += 1
             short = message[:end_index] + "..."
-            message = message[end_index + 1:]  # start our next message after the end of the current
+            message = message[end_index:]
             messages.append(short)
         else:
             messages.append(message)
@@ -106,7 +106,6 @@ bot = commands.Bot(command_prefix=prefix, description=description)
 
 # TODO: channel config, possibly as class?
 # TODO: general documentation for contributors
-# TODO: tag multiple characters with ;notifyme
 
 
 class Waifu(commands.Cog):
@@ -148,6 +147,7 @@ class Waifu(commands.Cog):
     @commands.command()
     @commands.is_owner()
     async def itsnn(self, ctx, *, character):
+        """Owner-only test command for sending notices for a character without pinging the user(s) signed up for the notice"""
         no_mention = suppress_mentions(self.itis(ctx, character))
         await ctx.send(no_mention, delete_after=300)
 
@@ -173,7 +173,6 @@ class Waifu(commands.Cog):
             to_notify = to_notify + ' ' + user
         to_notify = to_notify + ', it\'s ' + resolved_character
         to_notify += "\n"
-        # await ctx.send(to_notify)
         return to_notify
 
     @commands.command()
@@ -209,7 +208,7 @@ class Waifu(commands.Cog):
             log("time elapsed: {0}".format(end - start))
             results = discord_split(waifu_list)
             for result in results:
-                await ctx.send(result)
+                await ctx.send(result, delete_after=300)
 
     @commands.command(name="knownaliases")
     @commands.cooldown(1, 60, type=commands.BucketType.guild)
@@ -232,7 +231,7 @@ class Waifu(commands.Cog):
             log("time elapsed: {0}".format(end - start))
             results = discord_split(alias_list)
             for result in results:
-                await ctx.send(result)
+                await ctx.send(result, delete_after=300)
 
     @commands.command(name="doyouknow")
     async def do_you_know(self, ctx, *, character):
@@ -293,6 +292,7 @@ class Waifu(commands.Cog):
 
     @commands.command(name="multinotify")
     async def notify_multiple(self, ctx, *characters):
+        """Adds the user to the list of characters, specified as <"character 1", "character 2", ... "character n"> """
         confirmed_notices = ''
         for character in characters:
             confirmed_notices = confirmed_notices + self.notify(ctx, character)
@@ -428,6 +428,7 @@ class Waifu(commands.Cog):
                     log(str(self.notify_user_list[key]))
                     all_keys.append(key)
             end_msg = "You are signed up for notices for the following characters: \n"
+            all_keys = sorted(all_keys)
             for key in all_keys:
                 key_ns = str(key).partition('\\')[2]
                 end_msg += key_ns + ", "

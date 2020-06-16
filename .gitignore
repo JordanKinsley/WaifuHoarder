@@ -6,3 +6,6 @@ venv
 discopy
 wfbotlogs*
 __pycache__
+*.dir
+*.dat
+*.bak

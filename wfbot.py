@@ -417,7 +417,7 @@ class Waifu(commands.Cog):
             self.notify_user_list[new_key] = self.notify_user_list.pop(notice_key)
         except KeyError:
             await ctx.send("I don't have a character by the name of {0}".format(character))
-        await ctx.send("The character {0} has been renamed tp {1}.".format(notice_key,new_key))
+        await ctx.send("The character {0} has been renamed to {1}.".format(notice_key,new_key))
 
 
     @commands.command(name="stopall")
@@ -603,10 +603,10 @@ async def on_ready():
                 lf.truncate()
     except OSError:
         print("log file at {0} not found".format(args.log_file))
-    log('Logged in as', 'svf')
-    log(bot.user.name, 'svf')
-    log(bot.user.id, 'svf')
-    log('~~--~~--~~--~~', 'svf')
+    log('Logged in as', 'sf')
+    log(bot.user.name, 'sf')
+    log(bot.user.id, 'sf')
+    log('~~--~~--~~--~~', 'sf')
 
 
 @bot.command(name="off")

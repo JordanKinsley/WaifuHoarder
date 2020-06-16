@@ -4,6 +4,7 @@ from discord.ext import commands, tasks
 from discord.utils import escape_mentions as suppress_mentions
 from bothelper import log, discord_split
 
+
 class Waifu(commands.Cog):
     # These two are used by the shelve module to store what is essentially a dict of IDs mapped to values
     notify_user_list = None
@@ -53,16 +54,16 @@ class Waifu(commands.Cog):
     # helper function for its() and itsm(), but not a command
     def itis(self, ctx, character):
         """Takes a Discord Context ctx and string character as arguments and sends notices to all users signed up for them"""
-        log("character: " + character, 'vf', self.args)
+        log("def itis: character: " + character, 'vf', self.args)
         notify_users = None
         resolved_character = str(self.resolve_server_alias(ctx, character.title()))
-        log("resolved character: " + resolved_character, 'vf', self.args)
+        log("def itis: resolved character: " + resolved_character, 'vf', self.args)
         # we're only going to look for notices registered for the server where the command got called
         user_key = str(ctx.guild.id) + "\\" + resolved_character
-        log("user_key: " + user_key, 'vf', self.args)
+        log("def itis: user_key: " + user_key, 'vf', self.args)
         try:
             notify_users = self.notify_user_list[user_key]
-            log("notify_users: " + str(notify_users), 'vf', self.args)
+            log("def itis: notify_users: " + str(notify_users), 'vf', self.args)
             if not notify_users:  # if no values get returned for a <character>
                 raise KeyError
         except KeyError:
@@ -169,19 +170,21 @@ class Waifu(commands.Cog):
         If <character> does not match an alias, returns <character>"""
         current_server = str(ctx.guild.id)
         check_alias = current_server + '\\' + character
+        log("def resolve_server_alias: check_alias: " + check_alias, 'vf', self.args)
         resolved_character = ''
         try:
             # if we find that <character> refers to an alias in our character aliases, return the character referred to
             # by that alias. If this fails, it throws a KeyError, caught below
-            resolved_character = self.character_aliases[check_alias].replace(current_server, '')
-            log("resolved_character: " + resolved_character, 'vf', self.args)
-            log("check_alias: " + check_alias, 'vf', self.args)
+            full_character = self.character_aliases[check_alias]
+            log("def resolve_server_alias: full_character: {0}".format(full_character), 'vf', self.args)
+            resolved_character = full_character.replace(current_server, '')
+            log("def resolve_server_alias: resolved_character: " + resolved_character, 'vf', self.args)
         except KeyError:
             # if we don't find any aliases, just return the character
             resolved_character = character
-        log("character: " + character, 'vf', self.args)
-        log("resolved_character: " + resolved_character, 'vf', self.args)
-        log("check_alias: " + check_alias, 'vf', self.args)
+        log("def resolve_server_alias: post character: " + character, 'vf', self.args)
+        log("def resolve_server_alias: post resolved_character: " + resolved_character, 'vf', self.args)
+        log("def resolve_server_alias: post check_alias: " + check_alias, 'vf', self.args)
         return resolved_character
 
     @commands.command(name="notifyme")
@@ -218,7 +221,8 @@ class Waifu(commands.Cog):
             current_notices[0] = sender
             log("key not found, current notices: " + str(current_notices), 'vf', self.args)
         self.notify_user_list[notice_key] = current_notices
-        return str('Thanks {0}, you\'ve successfully been added to the notice list for {1}\n'.format(sender, resolved_character))
+        return str('Thanks {0}, you\'ve successfully been added to the notice list for {1}\n'.format(sender,
+                                                                                                     resolved_character))
 
     @commands.command(name="alias")
     async def add_alias(self, ctx, alias, character):
@@ -297,8 +301,7 @@ class Waifu(commands.Cog):
             self.notify_user_list[new_key] = self.notify_user_list.pop(notice_key)
         except KeyError:
             await ctx.send("I don't have a character by the name of {0}".format(character))
-        await ctx.send("The character {0} has been renamed to {1}.".format(notice_key,new_key))
-
+        await ctx.send("The character {0} has been renamed to {1}.".format(notice_key, new_key))
 
     @commands.command(name="stopall")
     # only allow the command to be run once every 60 seconds on each server this bot is in
@@ -473,4 +476,3 @@ class Waifu(commands.Cog):
         # command fails.
         if isinstance(error, commands.ExpectedClosingQuoteError):
             await ctx.send("Hey! I didn't see a closing quote for that command")
-

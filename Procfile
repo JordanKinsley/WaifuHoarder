@@ -1,1 +1,0 @@
-worker: python wfbot.py --token NjQ5NzAyNzc5MzIwOTI2MjQ4.XeAplw.N-jg18kdg2ONiqet1SrDqkuPrug -u 'userlist.db' -c 'aliases.db'

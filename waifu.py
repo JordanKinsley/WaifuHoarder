@@ -6,6 +6,9 @@ from bothelper import log, discord_split
 
 
 class Waifu(commands.Cog):
+    # FIXME: aliases got broken somehow?
+    # TODO: implement import/export of shelve to plain text
+
     # These two are used by the shelve module to store what is essentially a dict of IDs mapped to values
     notify_user_list = None
     character_aliases = None
@@ -411,6 +414,8 @@ class Waifu(commands.Cog):
             if server in key:
                 del self.character_aliases[key]
         await ctx.send("Aliases for {0} dropped".format(ctx.guild.name))
+
+    # TODO: notifyall?
 
     @commands.command()
     async def wotd(self, ctx):

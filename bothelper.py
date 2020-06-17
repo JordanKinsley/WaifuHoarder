@@ -1,3 +1,11 @@
+"""
+Helper functions for WaifuHoarder
+
+(C) 2019-2020 by Jordan Aurora Kinsley
+
+Licensed under MIT License, see LICENSE
+"""
+
 import datetime
 import argparse
 

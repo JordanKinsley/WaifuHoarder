@@ -1,3 +1,11 @@
+"""
+The Waifu Discord.py Cog at the heart of WaifuHoarder
+
+(C) 2019-2020 by Jordan Aurora Kinsley
+
+Licensed under MIT License, see LICENSE
+"""
+
 import shelve
 import datetime
 from discord.ext import commands, tasks
@@ -6,6 +14,7 @@ from bothelper import log, discord_split
 
 
 class Waifu(commands.Cog):
+    """Provides a Python Shelve system for persistent key:value storage of notices on a per-server basis."""
     # TODO: implement import/export of shelve to plain text
 
     # These two are used by the shelve module to store what is essentially a dict of IDs mapped to values

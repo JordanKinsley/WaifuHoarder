@@ -38,7 +38,7 @@ class Waifu(commands.Cog):
         self.notify_user_list.close()
         self.notify_user_list = shelve.open(self.user_list_location, flag='c', writeback=False)
         self.character_aliases.close()
-        self.character_aliases = shelve.open(self.user_list_location, flag='c', writeback=False)
+        self.character_aliases = shelve.open(self.character_alias_location, flag='c', writeback=False)
 
     # basic command that uses the function name as the command name
     @commands.command()

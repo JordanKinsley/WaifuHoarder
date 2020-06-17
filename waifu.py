@@ -6,7 +6,6 @@ from bothelper import log, discord_split
 
 
 class Waifu(commands.Cog):
-    # FIXME: aliases got broken somehow?
     # TODO: implement import/export of shelve to plain text
 
     # These two are used by the shelve module to store what is essentially a dict of IDs mapped to values
@@ -108,7 +107,7 @@ class Waifu(commands.Cog):
                     pass
                 else:
                     waifu_list += waifu_t[2] + ', '
-            log("time elapsed: {0}".format(end - start), 'vf', self.args)
+            log("def known_waifus: time elapsed: {0}".format(end - start), 'vf', self.args)
             results = discord_split(waifu_list)
             for result in results:
                 await ctx.send(result, delete_after=300)
@@ -131,7 +130,7 @@ class Waifu(commands.Cog):
                 else:
                     alias_list += alias_t[2] + " (refers to "
                     alias_list += str(self.character_aliases[alias]) + ")\n"
-            log("time elapsed: {0}".format(end - start), 'vf', self.args)
+            log("def known_aliases: time elapsed: {0}".format(end - start), 'vf', self.args)
             results = discord_split(alias_list)
             for result in results:
                 await ctx.send(result, delete_after=300)
@@ -146,14 +145,14 @@ class Waifu(commands.Cog):
         notice_key = str(ctx.guild.id) + "\\" + resolved_character
         try:
             if notice_key in self.notify_user_list:
-                log("notice key found: {0}".format(notice_key), 'vf', self.args)
+                log("def do_you_know: notice key found: {0}".format(notice_key), 'vf', self.args)
                 if sender in self.notify_user_list[notice_key]:
-                    log("sender on notice list", 'vf', self.args)
+                    log("def do_you_know: sender on notice list", 'vf', self.args)
                     await ctx.send(
                         "Yes, I know of {0} and you're all set to hear when they get posted next!".format(
                             resolved_character))
                 else:
-                    log("sender not on notice list", 'vf', self.args)
+                    log("def do_you_know: sender not on notice list", 'vf', self.args)
                     await ctx.send(
                         "Yes, I know of {0}! I don't see you signed up for notices for them. Sign up with `{1}notifyme {0}`".format(
                             resolved_character, ctx.bot.command_prefix))
@@ -162,7 +161,7 @@ class Waifu(commands.Cog):
                     "No, I don't have anything on {0}! Sign up with `{1}notifyme {0}`".format(resolved_character,
                                                                                               ctx.bot.command_prefix))
         except KeyError:
-            log("notice key not found: {0}".format(notice_key), 'vf', self.args)
+            log("def do_you_know: notice key not found: {0}".format(notice_key), 'vf', self.args)
             await ctx.send("No, I don't have anything on {0}! Sign up with `{1}notifyme {0}`".format(resolved_character,
                                                                                                      ctx.bot.command_prefix))
 
@@ -207,22 +206,22 @@ class Waifu(commands.Cog):
 
     def notify(self, ctx, character):
         sender = ctx.author.mention
-        log(sender, 'vf', self.args)
-        log("guild: " + str(ctx.guild), 'vf', self.args)
-        log("guild id: " + str(ctx.guild.id), 'vf', self.args)
+        log("def notify: {0}".format(sender), 'vf', self.args)
+        log("def notify: guild: " + str(ctx.guild), 'vf', self.args)
+        log("def notify: guild id: " + str(ctx.guild.id), 'vf', self.args)
         resolved_character = str(self.resolve_server_alias(ctx, character.title()))
         notice_key = str(ctx.guild.id) + "\\" + resolved_character
-        log(notice_key, 'vf', self.args)
+        log("def notify: " + notice_key, 'vf', self.args)
         current_notices = [None]
         try:
             current_notices = self.notify_user_list[notice_key]
-            log("key found, current notices: " + str(current_notices), 'vf', self.args)
+            log("def notify: key found, current notices: " + str(current_notices), 'vf', self.args)
             if sender in current_notices:
                 return str("You've already signed up for notices for {0}, {1}\n".format(resolved_character, sender))
             current_notices.append(sender)
         except KeyError:
             current_notices[0] = sender
-            log("key not found, current notices: " + str(current_notices), 'vf', self.args)
+            log("def notify: key not found, current notices: " + str(current_notices), 'vf', self.args)
         self.notify_user_list[notice_key] = current_notices
         return str('Thanks {0}, you\'ve successfully been added to the notice list for {1}\n'.format(sender,
                                                                                                      resolved_character))
@@ -230,10 +229,10 @@ class Waifu(commands.Cog):
     @commands.command(name="alias")
     async def add_alias(self, ctx, alias, character):
         """Assign an alias to a character, see notes.
-        alias <alias> <character> - The "alias" is the new way to refer to "character".
+        alias "<alias>" "<character>" - The "alias" is the new way to refer to "character".
         "Character" is the original notice assignment. Using quotes (") is key, otherwise the bot will not parse the characters correctly"""
-        log("alias: " + alias, 'vf', self.args)
-        log("character: " + character, 'vf', self.args)
+        log("def add_alias: alias: " + alias, 'vf', self.args)
+        log("def add_alias: character: " + character, 'vf', self.args)
         current_server = str(ctx.guild.id)
         sender = ctx.author.mention
         new_alias = current_server + '\\' + alias.title()
@@ -257,7 +256,7 @@ class Waifu(commands.Cog):
         current_notices = [None]
         try:
             current_notices = self.notify_user_list[notice_key]
-            log(current_notices, 'vf', self.args)
+            log("def stop_notify: {0}".format(current_notices), 'vf', self.args)
             current_notices.remove(sender)
             self.notify_user_list[notice_key] = current_notices
         except KeyError:
@@ -316,13 +315,13 @@ class Waifu(commands.Cog):
             sender = ctx.author.mention
             notify_keys = list(self.notify_user_list.keys())
             halt_keys = []
-            log("stop_all_notices invoked by {0}".format(sender), 'vf', self.args)
+            log("def stop_all_notices: stop_all_notices invoked by {0}".format(sender), 'vf', self.args)
             for key in notify_keys:
-                log(str(key), 'vf', self.args)
+                log("def stop_all_notices: " + str(key), 'vf', self.args)
                 if sender in self.notify_user_list[key]:
-                    log(str(self.notify_user_list[key]), 'vf', self.args)
+                    log("def stop_all_notices: " + str(self.notify_user_list[key]), 'vf', self.args)
                     current_notices = self.notify_user_list[key]
-                    log(current_notices, 'vf', self.args)
+                    log("def stop_all_notices: {0}".format(current_notices), 'vf', self.args)
                     current_notices.remove(sender)
                     self.notify_user_list[key] = current_notices
                     halt_keys.append(key)
@@ -341,11 +340,11 @@ class Waifu(commands.Cog):
             sender = ctx.author.mention
             notify_keys = list(self.notify_user_list.keys())
             all_keys = []
-            log("my_notices invoked by {0}".format(sender), 'vf', self.args)
+            log("def my_notices: my_notices invoked by {0}".format(sender), 'vf', self.args)
             for key in notify_keys:
-                log(str(key), 'vf', self.args)
+                log("def my_notices: " + str(key), 'vf', self.args)
                 if sender in self.notify_user_list[key]:
-                    log(str(self.notify_user_list[key]), 'vf', self.args)
+                    log("def my_notices: " + str(self.notify_user_list[key]), 'vf', self.args)
                     all_keys.append(key)
             end_msg = "You are signed up for notices for the following characters: \n"
             all_keys = sorted(all_keys)
@@ -361,12 +360,12 @@ class Waifu(commands.Cog):
         """An owner-only debug command that lists all users and notices. Suppresses @ mentions"""
         async with ctx.typing():
             notify_keys = list(self.notify_user_list.keys())
-            log(str(notify_keys), 'vf', self.args)
+            log("def debug_user_list: " + str(notify_keys), 'vf', self.args)
             user_list = ''
             for key in notify_keys:
-                log(key, 'vf', self.args)
+                log("def debug_user_list: ".format(key), 'vf', self.args)
                 user_list += 'key: ' + key + ' user: ' + str(self.notify_user_list[key]) + '\n'
-            log(user_list, 'vf', self.args)
+            log("def debug_user_list: ".format(user_list), 'vf', self.args)
             user_list = suppress_mentions(user_list)
             await ctx.send(user_list)
 
@@ -396,7 +395,7 @@ class Waifu(commands.Cog):
     @commands.command(name="dropserver")
     @commands.has_permissions(manage_guild=True)
     async def drop_notices_server(self, ctx):
-        """Drops all notices for this server only. Not yet implemented."""
+        """Drops all notices for this server only. Usable by the bot owner and users with the Manage Server permission."""
         server = str(ctx.guild.id)
         notify_keys = list(self.notify_user_list.keys())
         for key in notify_keys:
@@ -407,7 +406,7 @@ class Waifu(commands.Cog):
     @commands.command(name="dropaliases")
     @commands.has_permissions(manage_guild=True)
     async def drop_aliases_server(self, ctx):
-        """Drops all notices for this server only. Not yet implemented."""
+        """Drops all notices for this server only. Usable by the bot owner and users with the Manage Server permission."""
         server = str(ctx.guild.id)
         alias_keys = list(self.character_aliases.keys())
         for key in alias_keys:
@@ -420,7 +419,7 @@ class Waifu(commands.Cog):
     @commands.command()
     async def wotd(self, ctx):
         """Prints the Waifu of the Day"""
-        log("wotd invoked by " + str(ctx.author.mention), 'vf', self.args)
+        log("def wotd: wotd invoked by " + str(ctx.author.mention), 'vf', self.args)
         # TODO: implement admin/channel permissions for listing waifu on rotating schedule
 
         await ctx.send("Astolfo, always")

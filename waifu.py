@@ -479,6 +479,10 @@ class Waifu(commands.Cog):
         # we can handle two different permission errors here: a missing server permission (Manage Server) or not being
         # the bot's owner
         if isinstance(error, commands.MissingPermissions):
+            if await ctx.bot.is_owner(ctx.author):
+                # if the owner ran the command, ignore the permissions and run the command again
+                await ctx.reinvoke()
+                return
             await ctx.send("Uh oh. You need to have the {0} permission to use that command".format(error.missing_perms))
         if isinstance(error, commands.NotOwner):
             await ctx.send("Uh on. This command is only usable by the bot's owner")  # indicate owner here?
